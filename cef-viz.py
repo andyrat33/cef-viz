@@ -43,9 +43,9 @@ def allConsumersStats(zrstart,zrend):
     return allConsumers
 
 for item in allConsumersStats(zrStart, zrEnd).items():
-    print item[0]
+    # print item[0]
     for dp in item[1]:
-        print datetime.datetime.fromtimestamp(dp[2]).strftime('%Y, %m, %d, %H, %M'), dp[1]
+        print [datetime.datetime.fromtimestamp(dp[2]).strftime('%Y, %m, %d, %H, %M'), dp[0], dp[1]]
 
 #  store the call to getStats into var first and iterate over it for x,y values rather than call it twice.
 zrData = getStats("cef_consumer:docker1-1", zrStart, zrEnd)
@@ -82,7 +82,4 @@ def hello():
 
 
 if __name__ == "__main__":
-    from os import environ
-    if 'WINGDB_ACTIVE' in environ:
-        app.debug = False
-    app.run(use_reloader=True)
+    app.run(debug=True)
