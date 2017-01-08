@@ -6,6 +6,7 @@ import json
 import urllib2
 import redis
 import datetime
+import pygal
 
 rconfig = {
     'host': 'docker2',
@@ -51,6 +52,17 @@ for item in allConsumersStats(zrStart, zrEnd).items():
 #zrData = getStats("cef_consumer:docker1-1", zrStart, zrEnd)
 #xdate = map(lambda d: d.strftime('%c'), [datetime.datetime.fromtimestamp(x[2]) for x in zrData])
 #yvals = [int(y[1]) for y in zrData]
+
+
+@app.route('/pygal')
+def pygal():
+    # create a bar chart
+    title = 'Temps for %s, %s on %s' % (city, state, date)
+    bar_chart = pygal.Bar(width=1200, height=600, explicit_size=True, title=title, style=DarkSolarizedStyle, disable_xml_declaration=True)
+    bar_chart.x_labels = times
+    bar_chart.add('Temps in F', imp_temps)
+
+    return render_template('cef_pygal.html', title=title, bar_chart=bar_chart)
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
