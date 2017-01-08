@@ -48,9 +48,9 @@ for item in allConsumersStats(zrStart, zrEnd).items():
         print [datetime.datetime.fromtimestamp(dp[2]).strftime('%Y, %m, %d, %H, %M'), dp[0], dp[1]]
 
 #  store the call to getStats into var first and iterate over it for x,y values rather than call it twice.
-zrData = getStats("cef_consumer:docker1-1", zrStart, zrEnd)
-xdate = map(lambda d: d.strftime('%c'), [datetime.datetime.fromtimestamp(x[2]) for x in zrData])
-yvals = [int(y[1]) for y in zrData]
+#zrData = getStats("cef_consumer:docker1-1", zrStart, zrEnd)
+#xdate = map(lambda d: d.strftime('%c'), [datetime.datetime.fromtimestamp(x[2]) for x in zrData])
+#yvals = [int(y[1]) for y in zrData]
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
