@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<html>
+    <head>
         <title>{{ title }}</title>
     <script type="text/javascript" src="http://kozea.github.com/pygal.js/javascripts/svg.jquery.js"></script>
     <script type="text/javascript" src="http://kozea.github.com/pygal.js/javascripts/pygal-tooltips.js"></script>
     </head>
     <body>
-            {{ bar_chart.render()|safe }}
+            {{ date_chart.render()|safe }}
     </body>
-
-</body>
 </html>
-
