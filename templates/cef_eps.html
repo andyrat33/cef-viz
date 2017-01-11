@@ -5,33 +5,37 @@
     <title>{{ title }}</title>
 </head>
 <style>
-ol {
-    background: #ff9999;
-    padding: 20px;
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 
-ul {
-    background: #3399ff;
-    padding: 20px;
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
 }
 
-ol li {
-    background: #ffe5e5;
-    padding: 5px;
-    margin-left: 35px;
-}
-
-ul li {
-    background: #cce5ff;
-    margin: 5px;
+tr:nth-child(even) {
+    background-color: #dddddd;
 }
 </style>
 <body>
-<ul>
-      {% for key, value in results.items() %}
-            <li>CEF Consumer {{ key }} {{ value }} EPS</li>
+<table>
+  <tr>
+    <th>Consumer</th>
+    <th>EPS</th>
 
-      {% endfor %}
-</ul>
+  </tr>
+{% for key, value in results.items() %}
+    <tr>
+
+    <td>{{ key }}</td>
+    <td>{{ value }}</td>
+    </tr>
+{% endfor %}
+</table>
+
 </body>
 </html>
