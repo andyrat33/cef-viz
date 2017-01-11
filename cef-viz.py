@@ -46,7 +46,6 @@ def allConsumersStats(zrstart, zrend):
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
-# TODO def func to prepare data for the graph.
 
 
 @app.route("/")
@@ -68,10 +67,8 @@ def cef_consumer_stats():
         done = True
         date_chart.add(cefname, nums)
 
-    #date_chart.x_labels = list(set(str(date_chart.x_labels[x]) for x in range(len(date_chart.x_labels))))[0:len(nums)]
-    # Could use start and end time as the scale???
 
-    title = "CEF Consumer" #'Temps for %s, %s on %s'
+    title = "CEF Consumer"
 
 
     return render_template('cef_pygal.html',
@@ -82,15 +79,21 @@ def cef_consumer_stats():
 
 @app.route("/eps")
 def eps():
-
+    result = dict()
     for item in allConsumersStats(zrStart, zrEnd).items():
         # print item[0]
         total_events = 0
+        dcount = 0
         for dp in item[1]:
            # EPS = num events / divided by 600 seconds collection period
             total_events += dp[1]
-    return "<h1>Hello</h1>"
+            dcount += 1
 
+        result[dp[0]] = total_events / (dcount * 600)
+
+    return render_template('cef_eps.html',
+                           title='EPS', style=DarkSolarizedStyle,
+                           results=result)
 
 if __name__ == "__main__":
     app.run(debug=True)
