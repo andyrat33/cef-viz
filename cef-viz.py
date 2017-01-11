@@ -17,8 +17,8 @@ rconfig = {
 r = redis.StrictRedis(**rconfig)
 # Time Range for Selection - hardcoded for now
 print(datetime.datetime(2017, 1, 7))
-zrStart = int(datetime.datetime(2017, 1, 7, 7, 0).strftime('%s'))
-zrEnd = int(datetime.datetime(2017, 1, 7, 9, 0).strftime('%s'))
+zrStart = int(datetime.datetime(2017, 1, 11, 15, 0).strftime('%s'))
+zrEnd = int(datetime.datetime(2017, 1, 11, 19, 0).strftime('%s'))
 
 
 def getConsumers():
@@ -80,8 +80,15 @@ def cef_consumer_stats():
 
 
 
-@app.route("/hello")
-def hello():
+@app.route("/eps")
+def eps():
+
+    for item in allConsumersStats(zrStart, zrEnd).items():
+        # print item[0]
+        total_events = 0
+        for dp in item[1]:
+           # EPS = num events / divided by 600 seconds collection period
+            total_events += dp[1]
     return "<h1>Hello</h1>"
 
 
