@@ -95,5 +95,10 @@ def eps():
                            title='EPS', style=DarkSolarizedStyle,
                            results=result)
 
+@app.route("/total")
+def total():
+    total_count = bytes(r.get(name='count')).decode()
+    return "<h1>Total Events Processed {}</h1>".format(total_count)
+
 if __name__ == "__main__":
     app.run(debug=True)
