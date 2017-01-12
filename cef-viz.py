@@ -1,12 +1,20 @@
-from flask import Flask, flash, redirect, render_template, request, session, abort
-app = Flask(__name__)
-
 import os
 import json
 import redis
 import datetime
+
+from flask import Flask, flash, redirect, render_template, request, session, abort
+from flask_wtf import Form
+from wtforms import StringField, BooleanField
+from wtforms.validators import DataRequired
+from wtforms.fields.html5 import DateField, DateTimeField
+
 import pygal
 from pygal.style import DarkSolarizedStyle
+
+app = Flask(__name__)
+app.config.from_object('config')
+
 
 rconfig = {
     'host': 'docker2',
@@ -20,6 +28,9 @@ print(datetime.datetime(2017, 1, 7))
 zrStart = int(datetime.datetime(2017, 1, 11, 15, 0).strftime('%s'))
 zrEnd = int(datetime.datetime(2017, 1, 11, 19, 0).strftime('%s'))
 
+class dataEntry(Form):
+    uiStartDateTime = DateField('Start date', format='%Y-%m-%d')
+    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d-%H-%M')
 
 def getConsumers():
     return r.keys(pattern='cef_consumer:*')
@@ -58,7 +69,8 @@ def cef_consumer_stats():
         # print item[0]
         nums = []
         for dp in item[1]:
-            # TODO use a set for dates in x_labels
+            # Get dates once for x_labels align all samples to the first date-times returned by the first
+            # cef_consumer through the loop,
             if not done:
                 date_chart.x_labels.append(datetime.datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d-%H-%M'))
 
@@ -99,6 +111,17 @@ def eps():
 def total():
     total_count = bytes(r.get(name='count')).decode()
     return "<h1>Total Events Processed {}</h1>".format(total_count)
+
+
+@app.route('/submit', methods=('GET', 'POST'))
+def submit():
+    form = dataEntry(request.form)
+    if request.method == 'POST' and form.validate():
+        stuffx = form.uiStartDateTime.data
+        stuffy = form.uiEndDateTime.data
+        flash('Thanks for registering')
+        return redirect('/')
+    return render_template('submit.html', form=form)
 
 if __name__ == "__main__":
     app.run(debug=True)
