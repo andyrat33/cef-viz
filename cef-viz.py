@@ -24,8 +24,9 @@ rconfig = {
 
 r = redis.StrictRedis(**rconfig)
 
-sStart = datetime.now()
-sEnd = (sStart - timedelta(minutes=60))
+sEnd = datetime.now()
+sStart = (sEnd - timedelta(minutes=60))
+
 
 zrEnd = int(sEnd.strftime('%s'))
 zrStart = int(sStart.strftime('%s'))
