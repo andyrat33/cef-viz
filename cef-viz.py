@@ -23,16 +23,19 @@ rconfig = {
 }
 
 r = redis.StrictRedis(**rconfig)
-# Time Range for Selection - hardcoded for now
-print(datetime(2017, 1, 7))
-zrStart = int(datetime(2017, 1, 11, 15, 0).strftime('%s'))
-zrEnd = int(datetime(2017, 1, 11, 19, 0).strftime('%s'))
+
+sStart = datetime.now()
+sEnd = (sStart - timedelta(minutes=60))
+
+zrEnd = int(sEnd.strftime('%s'))
+zrStart = int(sStart.strftime('%s'))
+
 # TODO Create defaults for start and end = now() and start = now() - 2h
 
 
 def chkTimeDelta(zrEnd, zrStart, diff=10):
     cdiff = (zrEnd - zrStart)
-    # TODO Check that 10 mins or more occurs in the past
+    # Check that 10 mins or more occurs in the past
     ndiff = (datetime.now() - zrStart)
     if cdiff >= timedelta(minutes=diff) and ndiff >= timedelta(minutes=10):
         return True
@@ -41,7 +44,7 @@ def chkTimeDelta(zrEnd, zrStart, diff=10):
 
 
 class dataEntry(Form):
-    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=datetime.now())
+    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=datetime.now() - timedelta(minutes=60))
     uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=datetime.now())
     # custom validator to check the end time date is greater than the start time date uses chkTimeDelta in view
 
