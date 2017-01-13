@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ title }}</title>
 </head>
 <body>
 
-{% from "_formhelpers.html" import render_field %}
+<h2>Enter date and time range</h2>
 <form method=post>
 {{ form.hidden_tag() }}
   <dl>
-    {{ render_field(form.username) }}
-    {{ render_field(form.email) }}
-
+    {{ form.uiStartDateTime.label }} {{ form.uiStartDateTime }}
+    {{ form.uiEndDateTime.label }} {{ form.uiEndDateTime }}
+    
   </dl>
   <p><input type=submit value=submit>
 </form>

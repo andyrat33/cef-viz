@@ -1,13 +1,13 @@
 import os
 import json
 import redis
-import datetime
+from datetime import datetime, timedelta
 
-from flask import Flask, flash, redirect, render_template, request, session, abort
+from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
 from flask_wtf import Form
-from wtforms import StringField, BooleanField
+from wtforms import StringField, BooleanField, DateField, DateTimeField
 from wtforms.validators import DataRequired
-from wtforms.fields.html5 import DateField, DateTimeField
+
 
 import pygal
 from pygal.style import DarkSolarizedStyle
@@ -15,7 +15,7 @@ from pygal.style import DarkSolarizedStyle
 app = Flask(__name__)
 app.config.from_object('config')
 
-
+print(app.secret_key)
 rconfig = {
     'host': 'docker2',
     'port': 6379,
@@ -24,14 +24,24 @@ rconfig = {
 
 r = redis.StrictRedis(**rconfig)
 # Time Range for Selection - hardcoded for now
-print(datetime.datetime(2017, 1, 7))
-zrStart = int(datetime.datetime(2017, 1, 11, 15, 0).strftime('%s'))
-zrEnd = int(datetime.datetime(2017, 1, 11, 19, 0).strftime('%s'))
+print(datetime(2017, 1, 7))
+zrStart = int(datetime(2017, 1, 11, 15, 0).strftime('%s'))
+zrEnd = int(datetime(2017, 1, 11, 19, 0).strftime('%s'))
+# TODO Create defaults for start and end = now() and start = now() - 2h
+
+
+def chkTimeDelta(zrEnd, zrStart, diff=10):
+    cdiff = (zrEnd - zrStart)
+    # TODO Check that 10 mins or more occurs in the past
+    if cdiff >= timedelta(minutes=diff):
+        return True
+    else:
+        return False
 
 class dataEntry(Form):
-    uiStartDateTime = DateField('Start date', format='%Y-%m-%d')
-    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d-%H-%M')
-
+    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=datetime.now())
+    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=datetime.now())
+    # custom validator to check the end time date is greater than the start time date uses chkTimeDelta in view
 def getConsumers():
     return r.keys(pattern='cef_consumer:*')
 
@@ -72,7 +82,7 @@ def cef_consumer_stats():
             # Get dates once for x_labels align all samples to the first date-times returned by the first
             # cef_consumer through the loop,
             if not done:
-                date_chart.x_labels.append(datetime.datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d-%H-%M'))
+                date_chart.x_labels.append(datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d-%H-%M'))
 
             nums.append(dp[1])
             cefname = dp[0]
@@ -115,13 +125,16 @@ def total():
 
 @app.route('/submit', methods=('GET', 'POST'))
 def submit():
-    form = dataEntry(request.form)
+    global zrStart, zrEnd
+    form = dataEntry(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
-        stuffx = form.uiStartDateTime.data
-        stuffy = form.uiEndDateTime.data
-        flash('Thanks for registering')
-        return redirect('/')
-    return render_template('submit.html', form=form)
+        start = form.uiStartDateTime.data
+        end = form.uiEndDateTime.data
+        if chkTimeDelta(end, start):
+            zrStart = int(start.strftime('%s'))
+            zrEnd = int(end.strftime('%s'))
+            return redirect(url_for('cef_consumer_stats'))
+    return render_template('submit.html', title='Date and Time Range', form=form)
 
 if __name__ == "__main__":
     app.run(debug=True)
