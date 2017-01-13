@@ -33,15 +33,19 @@ zrEnd = int(datetime(2017, 1, 11, 19, 0).strftime('%s'))
 def chkTimeDelta(zrEnd, zrStart, diff=10):
     cdiff = (zrEnd - zrStart)
     # TODO Check that 10 mins or more occurs in the past
-    if cdiff >= timedelta(minutes=diff):
+    ndiff = (datetime.now() - zrStart)
+    if cdiff >= timedelta(minutes=diff) and ndiff >= timedelta(minutes=10):
         return True
     else:
         return False
+
 
 class dataEntry(Form):
     uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=datetime.now())
     uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=datetime.now())
     # custom validator to check the end time date is greater than the start time date uses chkTimeDelta in view
+
+
 def getConsumers():
     return r.keys(pattern='cef_consumer:*')
 
