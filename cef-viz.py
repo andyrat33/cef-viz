@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
 from flask_wtf import Form
-from wtforms import StringField, BooleanField, DateField, DateTimeField
-from wtforms.validators import DataRequired
+from wtforms import DateTimeField
+
 
 
 import pygal
@@ -30,7 +30,7 @@ sEnd = (sStart - timedelta(minutes=60))
 zrEnd = int(sEnd.strftime('%s'))
 zrStart = int(sStart.strftime('%s'))
 
-# TODO Create defaults for start and end = now() and start = now() - 2h
+# Done. Create defaults for start and end = now() and start = now() - 1h
 
 
 def chkTimeDelta(zrEnd, zrStart, diff=10):
@@ -59,7 +59,6 @@ def getStats(cef, zrstart, zrend):
         zldata.append(json.loads(bytes(reading).decode('utf-8')))
 
     for values in zldata:
-        #  datetime.datetime.fromtimestamp(values['date']).strftime('%c')
         yield values['cef_consumerId'], values['count'], values['date']
 
 
