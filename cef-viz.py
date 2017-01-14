@@ -7,15 +7,25 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from flask_wtf import Form
 from wtforms import DateTimeField
 from pygal.style import DarkSolarizedStyle
+from configparser import ConfigParser
+
+
+# store the config in cef-viz.cfg
+def get_config():
+    conf = ConfigParser()
+    conf.read('config/cefviz.ini')
+    return conf
+
+config = get_config()
+rconfig = {
+    'host': config.get('redis', 'host'),
+    'port': config.get('redis', 'port'),
+    'db': config.get('redis', 'db')
+}
 
 app = Flask(__name__)
 app.config.from_object('config')
 
-rconfig = {
-    'host': 'docker2',
-    'port': 6379,
-    'db': 0,
-}
 
 sEnd = datetime.now()
 sStart = datetime.now()
@@ -155,4 +165,4 @@ def submit():
     return render_template('submit.html', title='Date and Time Range', form=form)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0')
