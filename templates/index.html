@@ -1,0 +1,45 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}CEF Consumer Stats{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-inverse" role="navigation" xmlns="http://www.w3.org/1999/html">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">CEF Stats</a>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            {{ date_chart.render(is_unicode=True)|safe }}
+        </div>
+        <div class="row">
+            <div class="col-md-6">{{ wtf.quick_form(form) }}</div>
+            <div class="col-md-6"><p></br>Start Date & Time must be earlier than end date & time by 10 mins</p></div>
+            <div class="col-md-6"></div>
+
+        </div>
+            <div class="row">
+                <div class="col-md-6"><h3>All time Total Events {{ total_count }}</h3></div>
+                <div class="col-md-6">.col-md-6</div>
+                {#<table class="table table-hover">
+                    <tr>
+                        <th>Consumer</th>
+                        <th>EPS</th>
+
+                    </tr>
+                {% for key, value in eps_results.items() %}
+                <tr>
+
+                        <td>{{ key }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>#}
+        </div>
+
+    </div>
+{% endblock %}

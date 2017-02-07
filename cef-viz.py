@@ -2,13 +2,21 @@ import os
 import json
 import redis
 import pygal
+from pygal.style import DarkSolarizedStyle
 from datetime import datetime, timedelta
 from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
+# from flask import Flask, render_template
+from flask.ext.bootstrap import Bootstrap
+# from flask.ext.wtf import Form
 from flask_wtf import Form
-from wtforms import DateTimeField
-from pygal.style import DarkSolarizedStyle
+# from wtforms import StringField
+from wtforms import DateTimeField, SubmitField, SelectField
+from wtforms.validators import Required, Length
 from configparser import ConfigParser
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'top secret!'
+bootstrap = Bootstrap(app)
 
 # store the config in cef-viz.cfg
 def get_config():
@@ -23,16 +31,8 @@ rconfig = {
     'db': config.get('redis', 'db')
 }
 
-app = Flask(__name__)
-app.config.from_object('config')
-
-
-sEnd = datetime.now()
-sStart = datetime.now()
-zrEnd = 0
-zrStart = 0
-
 r = redis.StrictRedis(**rconfig)
+
 
 def updateDateTime():
     global sEnd, sStart, zrEnd, zrStart
@@ -43,37 +43,48 @@ def updateDateTime():
 
 updateDateTime()
 
-
-# Done. Create defaults for start and end = now() and start = now() - 1h
-
-
-def chkTimeDelta(dtEnd: datetime, dtStart: datetime, diff: int = 10) -> bool:
-    """
-    This function returns true or false. Start time must be less than end time by amount diff and start time must be at
-    least 10 minutes in the past
-    :param dtEnd:
-    :param dtStart:
-    :param diff:
-    :return: bool
-    """
-    cdiff = (dtEnd - dtStart)
-    # Check that 10 mins or more occurs in the past
-    ndiff = (datetime.now() - dtStart)
-    if cdiff >= timedelta(minutes=diff) and ndiff >= timedelta(minutes=10):
-        return True
-    else:
-        return False
-
-
-class dataEntry(Form):
-    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=datetime.now() - timedelta(minutes=60))
-    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=datetime.now())
-    # custom validator to check the end time date is greater than the start time date uses chkTimeDelta in view
-
-
-def getConsumers():
+def get_all_consumers():
     return r.keys(pattern='cef_consumer:*')
 
+def build_choices():
+    return [((bytes(x).decode('utf-8')),(bytes(x).decode('utf-8'))) for x in get_all_consumers()]
+
+cef_name = build_choices()[0][1]
+
+class dataEntry(Form):
+    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=sStart, validators=[Required()])
+    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=sEnd, validators=[Required()])
+    # custom validator to check the end time date is greater than the start time date
+    cef_consumer_instance = SelectField(
+        'CEF Consumer',
+        choices=build_choices())
+    submit = SubmitField('Submit')
+
+
+    def validate(self):
+        """This function returns true or false. Start time must be less than end time by 10 mins and start time must be at
+    least 10 minutes in the past"""
+        if not super().validate():
+            return False
+        tmpStart = self.uiStartDateTime.data
+        tmpEnd = self.uiEndDateTime.data
+        cdiff = (tmpEnd - tmpStart)
+        # Check that 10 mins or more occurs in the past
+        ndiff = (datetime.now() - tmpStart)
+        if cdiff <= timedelta(minutes=10):
+            self.uiStartDateTime.errors.append('Start date time must precede End date time')
+            result = False
+        else:
+            result = True
+            if ndiff <= timedelta(minutes=10):
+                message = 'Start date time must be at least 10 mins in the past {dt}'.format(dt=datetime.now().strftime('%H:%M'))
+                self.uiStartDateTime.errors.append(message)
+                result = False
+        return result
+
+
+def getConsumers(consumer_name):
+    return r.keys(pattern=consumer_name)
 
 def getStats(cef):
     zldata = []
@@ -85,20 +96,19 @@ def getStats(cef):
 
 
 def allConsumersStats():
+    global cef_name
     allConsumers = dict()
-    for consumer in getConsumers():
+    for consumer in getConsumers(cef_name):
         allConsumers[consumer] = []
         for record in getStats(consumer):
             allConsumers[consumer].append(record)
     return allConsumers
 
-tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-app = Flask(__name__, template_folder=tmpl_dir)
 
 
-@app.route("/")
-def cef_consumer_stats():
-    # create a bar chart
+def cef_consumer_chart():
+    """Create a graph for the cef_consumer"""
+    global cef_name
     done = False
     date_chart = pygal.Line(x_label_rotation=20)
     date_chart.x_labels = []
@@ -109,60 +119,32 @@ def cef_consumer_stats():
             # Get dates once for x_labels align all samples to the first date-times returned by the first
             # cef_consumer through the loop,
             if not done:
-                date_chart.x_labels.append(datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d-%H-%M'))
+                date_chart.x_labels.append(datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d %H:%M'))
 
             nums.append(dp[1])
-            cefname = dp[0]
         done = True
-        date_chart.add(cefname, nums)
+        date_chart.add(cef_name.split(':')[1], nums)
 
-    title = "CEF Consumer Graph"
-
-    return render_template('cef_pygal.html',
-                           title=title, StartDate=sStart.strftime('%Y-%m-%d %H:%M'),
-                           EndDate=sEnd.strftime('%Y-%m-%d %H:%M'),
-                           style=DarkSolarizedStyle,
-                           date_chart=date_chart)
+    return date_chart
 
 
-
-@app.route("/eps")
-def eps():
-    result = dict()
-    for item in allConsumersStats().items():
-        # print item[0]
-        total_events = 0
-        dcount = 0
-        for dp in item[1]:
-           # EPS = num events / divided by 600 seconds collection period
-            total_events += dp[1]
-            dcount += 1
-
-        result[dp[0]] = total_events / (dcount * 600)
-
-    return render_template('cef_eps.html',
-                           title='EPS', style=DarkSolarizedStyle,
-                           results=result)
-
-@app.route("/total")
-def total():
+@app.route('/', methods=('GET', 'POST'))
+def index():
+    global sStart, sEnd, zrStart, zrEnd, cef_name
     total_count = bytes(r.get(name='count')).decode()
-    return "<h1>Total Events Processed {}</h1>".format(total_count)
+    form = dataEntry()
 
-
-@app.route('/submit', methods=('GET', 'POST'))
-def submit():
-    global zrStart, zrEnd, sStart, sEnd
-
-    form = dataEntry(request.form, csrf_enabled=False)
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         sStart = form.uiStartDateTime.data
         sEnd = form.uiEndDateTime.data
-        if chkTimeDelta(sEnd, sStart):
-            zrStart = int(sStart.strftime('%s'))
-            zrEnd = int(sEnd.strftime('%s'))
-            return redirect(url_for('cef_consumer_stats'))
-    return render_template('submit.html', title='Date and Time Range', form=form)
+        # StartDate = sStart.strftime('%Y-%m-%d %H:%M')
+        # EndDate = sEnd.strftime('%Y-%m-%d %H:%M')
+        zrEnd = int(sEnd.strftime('%s'))
+        zrStart = int(sStart.strftime('%s'))
+        cef_name = form.cef_consumer_instance.data
 
-if __name__ == "__main__":
-    app.run(debug=True,host='0.0.0.0')
+    return render_template('index.html', form=form, total_count=total_count,
+                           date_chart=cef_consumer_chart())
+
+if __name__ == '__main__':
+    app.run(debug=True)
