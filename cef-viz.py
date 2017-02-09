@@ -128,14 +128,15 @@ def eps():
         # print item[0]
         total_events = 0
         dcount = 0
-        for dp in item[1]:
-            # EPS = num events / divided by 600 seconds collection period
-            total_events += dp[1]
-            dcount += 1
-        try:
-            result[dp[0]] = total_events / (dcount * 600)
-        except:
-            result[dp[0]] = 0
+        if item[1]:
+            for dp in item[1]:
+                # EPS = num events / divided by 600 seconds collection period
+                total_events += dp[1]
+                dcount += 1
+            try:
+                result[dp[0]] = total_events / (dcount * 600)
+            except:
+                result[dp[0]] = 0
 
     return result
 
