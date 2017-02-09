@@ -48,7 +48,6 @@ def build_choices():
 
     return [((bytes(x).decode('utf-8')),(bytes(x).decode('utf-8'))) for x in get_all_consumers()]
 
-
 cef_name = build_choices()[0][1]
 
 
