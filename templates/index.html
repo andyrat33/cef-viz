@@ -18,27 +18,28 @@
         </div>
         <div class="row">
             <div class="col-md-6">{{ wtf.quick_form(form) }}</div>
-            <div class="col-md-6"><p></br>Start Date & Time must be earlier than end date & time by 10 mins</p></div>
+            <div class="col-md-6"><p></br>Start Date & Time must be earlier than end date & time by 10 mins</p>
+            <table class="table table-hover">
+                        <tr>
+                            <th>Consumer</th>
+                            <th>EPS</th>
+
+                        </tr>
+                    {% for key, value in eps_results.items() %}
+                    <tr>
+
+                            <td>{{ key }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+            </div>
             <div class="col-md-6"></div>
 
         </div>
             <div class="row">
                 <div class="col-md-6"><h3>All time Total Events {{ total_count }}</h3></div>
-                <div class="col-md-6">Design By AR</div>
-                <table class="table table-hover">
-                    <tr>
-                        <th>Consumer</th>
-                        <th>EPS</th>
-
-                    </tr>
-                {% for key, value in eps_results.items() %}
-                <tr>
-
-                        <td>{{ key }}</td>
-                        <td>{{ value }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                <div class="col-md-6">By Andrew Ratcliffe</div>
         </div>
 
     </div>
