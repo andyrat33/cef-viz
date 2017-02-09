@@ -103,7 +103,7 @@ def getStats(cef):
 
 
 def allConsumersStats():
-    #global cef_name
+
     allConsumers = dict()
     for consumer in get_all_consumers():
         allConsumers[consumer] = []
@@ -142,22 +142,21 @@ def eps():
 
 def cef_consumer_chart():
     """Create a graph for the cef_consumer"""
-    #global cef_name
-    done = False
+
     date_chart = pygal.Line(x_label_rotation=20)
     date_chart.x_labels = []
-    #for item in allConsumersStats().items():
+
     for item in consumer_stats(cef_name).items():
         # print item[0]
         nums = []
         for dp in item[1]:
             # Get dates once for x_labels align all samples to the first date-times returned by the first
             # cef_consumer through the loop,
-            if not done:
-                date_chart.x_labels.append(datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d %H:%M'))
+
+            date_chart.x_labels.append(datetime.fromtimestamp(dp[2]).strftime('%Y-%m-%d %H:%M'))
 
             nums.append(dp[1])
-        done = True
+
         date_chart.add(cef_name.split(':')[1], nums)
 
     return date_chart
@@ -172,8 +171,6 @@ def index():
     if form.validate_on_submit():
         sStart = form.uiStartDateTime.data
         sEnd = form.uiEndDateTime.data
-        # StartDate = sStart.strftime('%Y-%m-%d %H:%M')
-        # EndDate = sEnd.strftime('%Y-%m-%d %H:%M')
         zrEnd = int(sEnd.strftime('%s'))
         zrStart = int(sStart.strftime('%s'))
         cef_name = form.cef_consumer_instance.data

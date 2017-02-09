@@ -1,5 +1,10 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% block scripts %}
+  {{super()}}
+    <script src="http://kozea.github.com/pygal.js/javascripts/svg.jquery.js"></script>
+    <script src="http://kozea.github.com/pygal.js/javascripts/pygal-tooltips.js"></script>
+{% endblock %}
 
 {% block title %}CEF Consumer Stats{% endblock %}
 
