@@ -1,17 +1,12 @@
-import os
 import json
 import redis
 import pygal
-from pygal.style import DarkSolarizedStyle
 from datetime import datetime, timedelta
-from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
-# from flask import Flask, render_template
+from flask import Flask, render_template
 from flask.ext.bootstrap import Bootstrap
-# from flask.ext.wtf import Form
 from flask_wtf import Form
-# from wtforms import StringField
 from wtforms import DateTimeField, SubmitField, SelectField
-from wtforms.validators import Required, Length
+from wtforms.validators import Required
 from configparser import ConfigParser
 
 app = Flask(__name__)
