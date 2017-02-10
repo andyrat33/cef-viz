@@ -3,3 +3,4 @@ flask
 flask-wtf
 wtforms
 pygal
+flask-bootstrap
