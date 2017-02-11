@@ -3,6 +3,7 @@ import redis
 import pygal
 from datetime import datetime, timedelta
 from flask import Flask, render_template
+from flask import session, g
 from flask.ext.bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms import DateTimeField, SubmitField, SelectField
@@ -154,6 +155,14 @@ def cef_consumer_chart():
         date_chart.add(cef_name.split(':')[1], nums)
 
     return date_chart
+
+@app.before_request
+def before_request():
+    if not 'count' in session:
+        session['count'] = 1
+    else:
+        session['count'] += 1
+    g.when = datetime.now().strftime('%H:%M:%S')
 
 
 @app.route('/', methods=('GET', 'POST'))
