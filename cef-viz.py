@@ -2,8 +2,7 @@ import json
 import redis
 import pygal
 from datetime import datetime, timedelta
-from flask import Flask, render_template
-from flask import session, g
+from flask import Flask, render_template, session
 from flask.ext.bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms import DateTimeField, SubmitField, SelectField
@@ -30,15 +29,6 @@ rconfig = {
 r = redis.StrictRedis(**rconfig)
 
 
-def updateDateTime():
-    global sEnd, sStart, zrEnd, zrStart
-    sEnd = datetime.now()
-    sStart = (sEnd - timedelta(minutes=60))
-    zrEnd = int(sEnd.strftime('%s'))
-    zrStart = int(sStart.strftime('%s'))
-
-updateDateTime()
-
 
 def get_all_consumers():
 
@@ -49,12 +39,22 @@ def build_choices():
 
     return [((bytes(x).decode('utf-8')),(bytes(x).decode('utf-8'))) for x in get_all_consumers()]
 
-cef_name = build_choices()[0][1]
+#@app.before_first_request
+def updateDateTime():
+    global sEnd, sStart, zrEnd, zrStart, cef_name
+    sEnd = datetime.now()
+    sStart = (sEnd - timedelta(minutes=60))
+    zrEnd = int(sEnd.strftime('%s'))
+    zrStart = int(sStart.strftime('%s'))
+    cef_name = build_choices()[0][1]
+
+updateDateTime()
 
 
 class dataEntry(Form):
-    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', default=sStart, validators=[Required()])
-    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', default=sEnd, validators=[Required()])
+    uiStartDateTime = DateTimeField('Start date time', format='%Y-%m-%d %H:%M', validators=[Required()])
+    uiEndDateTime = DateTimeField('End date time', format='%Y-%m-%d %H:%M', validators=[Required()])
+
     # custom validator to check the end time date is greater than the start time date
     cef_consumer_instance = SelectField(
         'CEF Consumer',
@@ -88,9 +88,9 @@ def get_consumer(consumer_pattern):
     return r.keys(pattern=consumer_pattern)
 
 
-def getStats(cef):
+def getStats(cef, range_start=zrStart, range_end=zrEnd):
     zldata = []
-    for reading in r.zrangebyscore(cef,zrStart,zrEnd):
+    for reading in r.zrangebyscore(cef, range_start, range_end):
         zldata.append(json.loads(bytes(reading).decode('utf-8')))
 
     for values in zldata:
@@ -108,7 +108,7 @@ def allConsumersStats():
     return allConsumers
 
 
-def consumer_stats(cef=cef_name):
+def consumer_stats(cef=cef_name, ):
     constatdata = dict()
     constatdata[cef] = []
     for record in getStats(cef):
@@ -156,27 +156,24 @@ def cef_consumer_chart():
 
     return date_chart
 
-@app.before_request
-def before_request():
-    if not 'count' in session:
-        session['count'] = 1
-    else:
-        session['count'] += 1
-    g.when = datetime.now().strftime('%H:%M:%S')
 
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
     global sStart, sEnd, zrStart, zrEnd, cef_name
     total_count = bytes(r.get(name='count')).decode()
-    form = dataEntry()
-
+    form = dataEntry(uiStartDateTime=(datetime.now() - timedelta(minutes=60)), uiEndDateTime=datetime.now())
+    g.sEnd = datetime.now()
+    g.sStart = (g.sEnd - timedelta(minutes=60))
+    g.zrEnd = int(g.sEnd.strftime('%s'))
+    g.zrStart = int(g.sStart.strftime('%s'))
+    g.cef_name = build_choices()[0][1]
     if form.validate_on_submit():
-        sStart = form.uiStartDateTime.data
-        sEnd = form.uiEndDateTime.data
-        zrEnd = int(sEnd.strftime('%s'))
-        zrStart = int(sStart.strftime('%s'))
-        cef_name = form.cef_consumer_instance.data
+        g.sStart = form.uiStartDateTime.data
+        g.sEnd = form.uiEndDateTime.data
+        g.zrEnd = int(g.sEnd.strftime('%s'))
+        g.zrStart = int(g.sStart.strftime('%s'))
+        g.cef_name = form.cef_consumer_instance.data
 
     return render_template('index.html', form=form, total_count=total_count,
                            date_chart=cef_consumer_chart(), eps_results=eps())
