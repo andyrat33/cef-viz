@@ -2,7 +2,7 @@ import json
 import redis
 import pygal
 from datetime import datetime, timedelta
-from flask import Flask, render_template, session
+from flask import Flask, render_template, g
 from flask.ext.bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms import DateTimeField, SubmitField, SelectField
@@ -38,17 +38,6 @@ def get_all_consumers():
 def build_choices():
 
     return [((bytes(x).decode('utf-8')),(bytes(x).decode('utf-8'))) for x in get_all_consumers()]
-
-#@app.before_first_request
-def updateDateTime():
-    global sEnd, sStart, zrEnd, zrStart, cef_name
-    sEnd = datetime.now()
-    sStart = (sEnd - timedelta(minutes=60))
-    zrEnd = int(sEnd.strftime('%s'))
-    zrStart = int(sStart.strftime('%s'))
-    cef_name = build_choices()[0][1]
-
-updateDateTime()
 
 
 class dataEntry(Form):
@@ -88,7 +77,7 @@ def get_consumer(consumer_pattern):
     return r.keys(pattern=consumer_pattern)
 
 
-def getStats(cef, range_start=zrStart, range_end=zrEnd):
+def getStats(cef, range_start, range_end):
     zldata = []
     for reading in r.zrangebyscore(cef, range_start, range_end):
         zldata.append(json.loads(bytes(reading).decode('utf-8')))
@@ -97,29 +86,29 @@ def getStats(cef, range_start=zrStart, range_end=zrEnd):
         yield values['cef_consumerId'], values['count'], values['date']
 
 
-def allConsumersStats():
+def allConsumersStats(range_start, range_end):
 
     allConsumers = dict()
     for consumer in get_all_consumers():
         allConsumers[consumer] = []
         # Use a call to consumer_stats(consumer)
-        for record in getStats(consumer):
+        for record in getStats(consumer,range_start, range_end):
             allConsumers[consumer].append(record)
     return allConsumers
 
 
-def consumer_stats(cef=cef_name, ):
+def consumer_stats(cef, range_start, range_end):
     constatdata = dict()
     constatdata[cef] = []
-    for record in getStats(cef):
+    for record in getStats(cef,range_start, range_end):
         constatdata[cef].append(record)
 
     return constatdata
 
-def eps():
+def eps(range_start, range_end):
 
     result = dict()
-    for item in allConsumersStats().items():
+    for item in allConsumersStats(range_start, range_end).items():
         # print item[0]
         total_events = 0
         dcount = 0
@@ -135,13 +124,14 @@ def eps():
 
     return result
 
-def cef_consumer_chart():
+
+def cef_consumer_chart(cef, range_start, range_end):
     """Create a graph for the cef_consumer"""
 
     date_chart = pygal.Line(x_label_rotation=20)
     date_chart.x_labels = []
 
-    for item in consumer_stats(cef_name).items():
+    for item in consumer_stats(cef, range_start, range_end).items():
         # print item[0]
         nums = []
         for dp in item[1]:
@@ -152,19 +142,22 @@ def cef_consumer_chart():
 
             nums.append(dp[1])
 
-        date_chart.add(cef_name.split(':')[1], nums)
+        date_chart.add(cef.split(':')[1], nums)
 
     return date_chart
 
 
 
+
+
 @app.route('/', methods=('GET', 'POST'))
 def index():
-    global sStart, sEnd, zrStart, zrEnd, cef_name
+
     total_count = bytes(r.get(name='count')).decode()
-    form = dataEntry(uiStartDateTime=(datetime.now() - timedelta(minutes=60)), uiEndDateTime=datetime.now())
+
     g.sEnd = datetime.now()
     g.sStart = (g.sEnd - timedelta(minutes=60))
+    form = dataEntry(uiStartDateTime=g.sStart, uiEndDateTime=g.sEnd)
     g.zrEnd = int(g.sEnd.strftime('%s'))
     g.zrStart = int(g.sStart.strftime('%s'))
     g.cef_name = build_choices()[0][1]
@@ -176,7 +169,12 @@ def index():
         g.cef_name = form.cef_consumer_instance.data
 
     return render_template('index.html', form=form, total_count=total_count,
-                           date_chart=cef_consumer_chart(), eps_results=eps())
+                           date_chart=cef_consumer_chart(g.cef_name, g.zrStart, g.zrEnd), eps_results=eps(g.zrStart, g.zrEnd))
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
