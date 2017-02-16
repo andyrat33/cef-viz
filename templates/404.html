@@ -1,0 +1,13 @@
+{% extends "bootstrap/base.html" %}
+{% block navbar %}
+    <nav class="navbar navbar-inverse" role="navigation" xmlns="http://www.w3.org/1999/html">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">CEF Stats <span class="label label-primary">{{ total_count }}</span></a>
+        </div>
+    </nav>
+{% endblock %}
+{% block title %}Not Found{% endblock %}
+{% block content %}
+    <h1>Not Found</h1>
+    <p><a href="{{ url_for('index') }}">Return to home page</a></p>
+{% endblock %}
