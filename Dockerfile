@@ -2,5 +2,7 @@ FROM python:3.5
 ADD . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
-ENTRYPOINT [ "python" ]
-CMD [ "/app/cef-viz.py"]
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/gunicorn", "-w 4", "--bind", ":8080", "cef-viz:app"]

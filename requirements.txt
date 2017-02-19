@@ -4,3 +4,4 @@ flask-wtf
 wtforms
 pygal
 flask-bootstrap
+gunicorn

@@ -177,4 +177,4 @@ def notfound(e):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=False)
