@@ -9,6 +9,7 @@ from wtforms import DateTimeField, SubmitField, SelectField
 from wtforms.validators import Required
 from configparser import ConfigParser
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
 bootstrap = Bootstrap(app)
@@ -177,4 +178,4 @@ def notfound(e):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False)
+    app.run(debug=True)
