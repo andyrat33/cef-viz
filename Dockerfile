@@ -5,4 +5,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8080
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "-w 4", "--bind", ":8080", "cef-viz:app"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/app/gunicorn.conf", "--bind", ":8080", "cef-viz:app"]
