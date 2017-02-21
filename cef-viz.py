@@ -3,7 +3,7 @@ import redis
 import pygal
 from datetime import datetime, timedelta
 from flask import Flask, render_template, g
-from flask.ext.bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms import DateTimeField, SubmitField, SelectField
 from wtforms.validators import Required
