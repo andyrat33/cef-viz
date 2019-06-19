@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "title": "CEF Viz",
+    "owner": "Andrew",
+    "description": "Stats and Visualisations for CEF consumer performance"
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "title": "CEFViz",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "id": 0
+      }
+    ],
+    "reviewer": "Andrew"
+  }
+}
