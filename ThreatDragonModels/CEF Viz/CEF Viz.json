@@ -487,16 +487,26 @@
               "angle": 0,
               "id": "fafe9cd8-39c3-4426-a940-fb18f374609e",
               "z": 16,
-              "hasOpenThreats": false,
+              "hasOpenThreats": true,
+              "threats": [
+                {
+                  "status": "Open",
+                  "severity": "Low",
+                  "type": "Tampering",
+                  "title": "Config File Tampering",
+                  "description": "Config files could be changed to affect the program operation",
+                  "mitigation": "Secure Files with appropriate perms and access controls"
+                }
+              ],
               "attrs": {
                 ".element-shape": {
-                  "class": "element-shape hasNoOpenThreats isInScope"
+                  "class": "element-shape hasOpenThreats isInScope"
                 },
                 "text": {
                   "text": "Docker Store"
                 },
                 ".element-text": {
-                  "class": "element-text hasNoOpenThreats isInScope"
+                  "class": "element-text hasOpenThreats isInScope"
                 }
               }
             },
